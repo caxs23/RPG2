@@ -19,6 +19,7 @@
             position: relative;
             width: 100vw;
             height: 100vh;
+            background: #000;
         }
         canvas {
             display: block;
@@ -31,65 +32,85 @@
             height: 100%;
             pointer-events: none;
         }
+        /* 상단 UI 레이아웃 최적화 */
+        .top-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .status-card {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .quest-card {
+            background: rgba(251, 191, 36, 0.9);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            align-self: flex-end;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        /* 하단 컨트롤러 최적화 */
         .controls {
             position: absolute;
-            bottom: 60px;
+            bottom: 30px;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 15px;
             pointer-events: auto;
         }
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
         .btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.5); /* 투명도 상향 조정 */
-            border: 2px solid white;
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.8);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
-            color: black;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
-        }
-        .btn:active { transform: scale(0.9); background: white; }
-        
-        .status-bar {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
+            font-size: 16px;
             color: white;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid #444;
-            pointer-events: auto;
-            min-width: 180px;
-            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            transition: all 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
-        .quest-log {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fbbf24;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-        }
+        .btn:active { transform: scale(0.85); background: rgba(255,255,255,0.6); }
+        .btn-action { background: rgba(237, 137, 54, 0.5); border-color: #ed8936; }
+        .btn-attack { background: rgba(245, 101, 101, 0.5); border-color: #f56565; }
+
         .dialog-box {
             position: absolute;
-            bottom: 140px;
+            bottom: 110px;
             left: 50%;
             transform: translateX(-50%);
-            width: 85%;
-            background: #2d3748;
-            border: 3px solid #718096;
-            padding: 20px;
-            border-radius: 15px;
+            width: 90%;
+            background: rgba(45, 55, 72, 0.95);
+            border: 2px solid #718096;
+            padding: 15px;
+            border-radius: 12px;
             display: none;
             pointer-events: auto;
             z-index: 100;
@@ -101,14 +122,14 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: #1a202c;
-            padding: 25px;
-            border-radius: 20px;
+            padding: 20px;
+            border-radius: 16px;
             display: none;
             pointer-events: auto;
             z-index: 101;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
-            max-width: 350px;
-            width: 90%;
+            width: 85%;
+            max-height: 80vh;
+            overflow-y: auto;
             border: 2px solid #ed8936;
         }
         #hidden-media { display: none; }
@@ -125,40 +146,41 @@
     </div>
 
     <div class="ui-overlay">
-        <div class="status-bar">
-            <div class="flex justify-between"><span>💰 골드:</span> <span id="gold">0</span></div>
-            <div class="flex justify-between"><span>⚔️ 공격력:</span> <span id="power">10</span></div>
-            <div class="flex justify-between"><span>📦 전리품:</span> <span id="loot">0</span></div>
-            <div class="mt-1 pt-1 border-t border-gray-600 text-center font-bold text-yellow-400">
-                📍 <span id="location-name">마을</span>
+        <div class="top-ui">
+            <div class="status-card">
+                <div class="flex gap-3">
+                    <span>💰 <span id="gold">0</span></span>
+                    <span>⚔️ <span id="power">10</span></span>
+                    <span>📦 <span id="loot">0</span></span>
+                </div>
+                <div class="font-bold text-yellow-400">📍 <span id="location-name">마을</span></div>
             </div>
-        </div>
-
-        <div id="quest-ui" class="quest-log">
-            퀘스트: <span id="quest-desc">상인과 대화하기</span>
+            <div id="quest-ui" class="quest-card">
+                📜 <span id="quest-desc">상인과 대화하기</span>
+            </div>
         </div>
 
         <div id="dialog" class="dialog-box">
             <div id="speaker-name" class="font-bold text-blue-300 mb-1">상인</div>
-            <p id="dialog-text">전리품을 팔러 왔나?</p>
-            <div id="dialog-buttons" class="mt-4 flex flex-wrap gap-2"></div>
+            <p id="dialog-text" class="text-sm">전리품을 팔러 왔나?</p>
+            <div id="dialog-buttons" class="mt-3 flex flex-wrap gap-2"></div>
         </div>
 
         <div id="shop" class="shop-menu text-white">
-            <h2 class="text-2xl font-bold mb-4 text-orange-400">전설의 대장간</h2>
-            <div id="shop-items" class="space-y-3"></div>
-            <button onclick="toggleShop()" class="mt-6 w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-xl transition">닫기</button>
+            <h2 class="text-xl font-bold mb-4 text-orange-400">전설의 대장간</h2>
+            <div id="shop-items" class="space-y-2"></div>
+            <button onclick="toggleShop()" class="mt-4 w-full bg-gray-600 py-2 rounded-xl">닫기</button>
         </div>
 
         <div class="controls">
-            <div class="flex gap-4">
+            <div class="control-group">
                 <div id="btn-left" class="btn">◀</div>
                 <div id="btn-right" class="btn">▶</div>
             </div>
-            <div class="flex gap-4">
+            <div class="control-group">
                 <div id="btn-jump" class="btn">UP</div>
-                <div id="btn-attack" class="btn">ATT</div>
-                <div id="btn-action" class="btn">ACT</div>
+                <div id="btn-attack" class="btn btn-attack">ATK</div>
+                <div id="btn-action" class="btn btn-action">ACT</div>
             </div>
         </div>
     </div>
@@ -203,9 +225,12 @@ const playerImg1 = new Image(); playerImg1.src = 'https://github.com/caxs23/plaf
 const playerImg2 = new Image(); playerImg2.src = 'https://github.com/caxs23/plaffy-bird/blob/main/2-removebg-preview.png?raw=true';
 
 const GRAVITY = 0.6;
-const GROUND_Y = 0.8;
+const GROUND_Y = 0.75; // 모바일 화면 비율에 맞춰 조금 올림
 
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+function resize() { 
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight; 
+}
 window.addEventListener('resize', resize);
 resize();
 
@@ -259,13 +284,13 @@ class Entity {
         if (this.hitTimer > 0) ctx.filter = 'brightness(2) sepia(1) hue-rotate(-50deg)';
         ctx.font = `${this.size}px serif`;
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#FFFFFF'; // 완전 불투명 흰색
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillText(this.emoji, this.x, this.y + this.size);
         if (this.hp > 0) {
             const barW = this.size;
-            ctx.fillStyle = '#FF0000'; // HP 배경 완전 불투명
+            ctx.fillStyle = '#FF0000';
             ctx.fillRect(this.x - barW/2, this.y - 15, barW, 4);
-            ctx.fillStyle = '#00FF00'; // HP 바 완전 불투명
+            ctx.fillStyle = '#00FF00';
             ctx.fillRect(this.x - barW/2, this.y - 15, barW * (this.hp / this.initialHp), 4);
         }
         ctx.restore();
@@ -281,15 +306,14 @@ class Chest {
         ctx.save();
         ctx.font = '40px serif';
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#FFFFFF';
         ctx.fillText(this.opened ? '🔓' : '🎁', this.x, this.y);
         ctx.restore();
     }
 }
 
 const player = {
-    x: 100, y: 0, width: 80, height: 75, vx: 0, vy: 0,
-    speed: 6, jumpPower: -13, isGrounded: false, direction: 1,
+    x: 100, y: 0, width: 70, height: 65, vx: 0, vy: 0,
+    speed: 5.5, jumpPower: -12, isGrounded: false, direction: 1,
     frame: 0, walkCounter: 0, isAttacking: false, attackCooldown: 0,
 
     update() {
@@ -319,10 +343,10 @@ const player = {
         const img = (this.walkCounter > 0 || !this.isGrounded) ? (this.frame === 0 ? playerImg1 : playerImg2) : playerImg1;
         
         if (this.isAttacking) {
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+            ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(this.width, this.height/2, 40, -Math.PI/2, Math.PI/2);
+            ctx.arc(this.width, this.height/2, 35, -Math.PI/2, Math.PI/2);
             ctx.stroke();
         }
         ctx.drawImage(img, 0, 0, this.width, this.height);
@@ -338,7 +362,7 @@ const player = {
         targets.forEach(m => {
             if (!m.dead) {
                 const dist = Math.abs((this.x + this.width/2) - m.x);
-                if (dist < 120) {
+                if (dist < 100) {
                     m.hp -= state.attackPower;
                     m.hitTimer = 10;
                     createEffect(m.x, m.y + m.size/2, '#ff0000', 8);
@@ -357,19 +381,19 @@ const player = {
     interact() {
         let foundNpc = false;
         villagers.forEach(v => {
-            if (!v.dead && Math.abs(this.x - v.x) < 100) { foundNpc = true; handleNpcDialog(v.emoji); }
+            if (!v.dead && Math.abs(this.x - v.x) < 80) { foundNpc = true; handleNpcDialog(v.emoji); }
         });
-        if (!foundNpc && locations[state.location].type === 'town' && Math.abs(this.x - canvas.width/2) < 100) {
+        if (!foundNpc && locations[state.location].type === 'town' && Math.abs(this.x - canvas.width/2) < 80) {
             handleNpcDialog('👨‍🌾');
         }
         chests.forEach(c => {
-            if (!c.opened && Math.abs(this.x - c.x) < 60) {
+            if (!c.opened && Math.abs(this.x - c.x) < 50) {
                 c.opened = true;
                 state.chestsFound.push(c.id);
                 const reward = 100 + Math.floor(Math.random() * 400);
                 state.gold += reward;
                 createEffect(c.x, c.y, '#ffd700', 20);
-                showDialog("시스템", `숨겨진 보물 상자를 발견했습니다! (+${reward}G)`);
+                showDialog("시스템", `숨겨진 보물을 발견했습니다! (+${reward}G)`);
                 updateUI();
             }
         });
@@ -384,42 +408,42 @@ function changeLocation() {
     monsters.length = 0; villagers.length = 0; chests.length = 0;
     const loc = locations[state.location];
     if (loc.type === 'town') {
-        for (let i = 0; i < 3; i++) {
-            villagers.push(new Entity(100 + Math.random() * (canvas.width - 200), canvas.height * GROUND_Y - 50, 55, ['👦', '👩', '👴', '👮'][Math.floor(Math.random()*4)], 100, true));
+        for (let i = 0; i < 2; i++) {
+            villagers.push(new Entity(100 + Math.random() * (canvas.width - 200), canvas.height * GROUND_Y - 45, 50, ['👦', '👩', '👴', '👮'][Math.floor(Math.random()*4)], 100, true));
         }
     } else {
-        const count = state.location === 'boss_lair' ? 1 : 4;
+        const count = state.location === 'boss_lair' ? 1 : 3;
         const hpBase = state.location === 'boss_lair' ? 2000 : 30 * (Object.keys(locations).indexOf(state.location));
         for (let i = 0; i < count; i++) {
-            monsters.push(new Entity(300 + Math.random() * (canvas.width - 400), canvas.height * GROUND_Y - 60, 60, loc.enemy, hpBase));
+            monsters.push(new Entity(300 + Math.random() * (canvas.width - 400), canvas.height * GROUND_Y - 55, 55, loc.enemy, hpBase));
         }
     }
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.4) {
         chests.push(new Chest(Math.random() * (canvas.width - 100) + 50, canvas.height * GROUND_Y - 10));
     }
     updateUI();
 }
 
 function handleNpcDialog(emoji) {
-    let name = "주민", text = "안녕하세요, 좋은 날씨네요.", btns = [{t: "닫기", f: closeDialog}];
+    let name = "주민", text = "안녕하세요, 모험가님!", btns = [{t: "닫기", f: closeDialog}];
     if (emoji === '👨‍🌾') {
         name = "상인";
-        text = "물건을 팔거나 장비를 강화하고 싶나?";
+        text = "강화나 전리품 판매가 필요하신가요?";
         btns = [
-            {t: "전리품 판매 (개당 25G)", f: sellLoot},
-            {t: "상점 열기", f: toggleShop},
+            {t: "전리품 판매", f: sellLoot},
+            {t: "대장간 상점", f: toggleShop},
             {t: "닫기", f: closeDialog}
         ];
         if (state.questStep === 0) {
             state.questStep = 1;
-            text = "오! 새로운 모험가로군. 저기 들판의 토끼들을 5마리만 잡아줄 수 있겠나?";
+            text = "토끼를 5마리만 잡아다 주시면 보상을 드리죠.";
             checkQuest();
         } else if (state.questStep === 2) {
             state.questStep = 3; state.gold += 500;
-            text = "정말 대단해! 여기 보상으로 500G를 주겠네.";
+            text = "오! 정말 잡아오셨군요! 여기 약속한 보상입니다.";
             checkQuest();
         }
-    } else if (emoji === '👴') { name = "장로"; text = "세상이 흉흉하구먼... 마왕의 성은 하늘 섬 너머에 있다네."; }
+    } else if (emoji === '👴') { name = "장로"; text = "저 너머 마왕의 성이 보이기 시작하는구먼..."; }
     showDialog(name, text, btns);
 }
 
@@ -430,7 +454,7 @@ function showDialog(name, text, buttons = [{t: "닫기", f: closeDialog}]) {
     btnContainer.innerHTML = '';
     buttons.forEach(b => {
         const btn = document.createElement('button');
-        btn.className = "bg-blue-600 px-4 py-2 rounded-lg text-sm font-bold";
+        btn.className = "bg-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold";
         btn.innerText = b.t;
         btn.onclick = b.f;
         btnContainer.appendChild(btn);
@@ -440,7 +464,7 @@ function showDialog(name, text, buttons = [{t: "닫기", f: closeDialog}]) {
 
 function checkQuest() {
     const q = document.getElementById('quest-desc');
-    if (state.questStep === 0) q.innerText = "마을 상인과 대화하기";
+    if (state.questStep === 0) q.innerText = "상인과 대화하기";
     else if (state.questStep === 1) {
         q.innerText = `토끼 사냥 (${state.kills}/5)`;
         if (state.kills >= 5) { state.questStep = 2; checkQuest(); }
@@ -453,20 +477,17 @@ function drawBackground() {
     ctx.fillStyle = loc.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 바닥 장식 (격리)
     ctx.save();
-    ctx.fillStyle = '#000000';
-    ctx.globalAlpha = 0.1; // 바닥 장식만 투명하게
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
     ctx.fillRect(0, canvas.height * GROUND_Y, canvas.width, canvas.height * (1-GROUND_Y));
-    ctx.restore(); // 투명도 설정 원복
+    ctx.restore();
     
     ctx.save();
-    ctx.font = '100px serif';
+    ctx.font = '80px serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFFFFF';
     if (loc.type === 'town') {
-        ctx.fillText('🏠', 200, canvas.height * GROUND_Y);
-        ctx.fillText('🏛️', canvas.width - 300, canvas.height * GROUND_Y);
+        ctx.fillText('🏠', 150, canvas.height * GROUND_Y);
+        ctx.fillText('🏛️', canvas.width - 200, canvas.height * GROUND_Y);
         ctx.fillText('👨‍🌾', canvas.width/2, canvas.height * GROUND_Y - 10);
     }
     ctx.restore();
@@ -482,11 +503,14 @@ function updateUI() {
 function sellLoot() {
     if (state.loot > 0) {
         state.gold += state.loot * 25; state.loot = 0; updateUI();
-        showDialog("상인", "거래 고맙네!");
-    } else showDialog("상인", "팔 수 있는 전리품이 없군...");
+        showDialog("상인", "전부 매입했습니다. 감사합니다!");
+    } else showDialog("상인", "판매할 전리품이 없으시네요.");
 }
 
-function closeDialog() { document.getElementById('dialog').style.display = 'none'; document.getElementById('shop').style.display = 'none'; }
+function closeDialog() { 
+    document.getElementById('dialog').style.display = 'none'; 
+    document.getElementById('shop').style.display = 'none'; 
+}
 
 const shopItems = [
     { name: "강철 검", power: 40, price: 200, level: 2 },
@@ -504,9 +528,9 @@ function toggleShop() {
         shopItems.forEach(item => {
             const owned = state.weaponLevel >= item.level;
             const btn = document.createElement('div');
-            btn.className = "flex justify-between items-center bg-gray-800 p-3 rounded-xl";
-            btn.innerHTML = `<div><div class="font-bold text-yellow-400">${item.name}</div><div class="text-xs">공격력: ${item.power}</div></div>
-                <button onclick="buyItem(${item.level}, ${item.price}, ${item.power})" class="px-4 py-1 rounded-lg ${owned ? 'bg-gray-600' : 'bg-orange-500'}" ${owned ? 'disabled' : ''}>${owned ? '보유중' : item.price + 'G'}</button>`;
+            btn.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg";
+            btn.innerHTML = `<div class="text-sm"><div class="font-bold text-yellow-400">${item.name}</div><div class="text-[10px]">파워: ${item.power}</div></div>
+                <button onclick="buyItem(${item.level}, ${item.price}, ${item.power})" class="px-3 py-1 rounded-md text-xs ${owned ? 'bg-gray-600' : 'bg-orange-500'}" ${owned ? 'disabled' : ''}>${owned ? '보유중' : item.price + 'G'}</button>`;
             container.appendChild(btn);
         });
     }
@@ -535,7 +559,6 @@ function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     
-    // 파티클 업데이트 (격리)
     ctx.save();
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
@@ -543,7 +566,7 @@ function loop() {
         if (p.life <= 0) { particles.splice(i, 1); } 
         else {
             ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, 4, 4);
+            ctx.fillRect(p.x, p.y, 3, 3);
         }
     }
     ctx.restore();
