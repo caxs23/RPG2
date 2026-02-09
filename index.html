@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>모바일 횡스크롤 RPG: 에픽 월드</title>
+    <title>모바일 횡스크롤 RPG: 에픽 월드 (Extended)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -32,7 +32,7 @@
             height: 100%;
             pointer-events: none;
         }
-        /* 상단 UI 레이아웃 최적화 */
+        /* 상단 UI */
         .top-ui {
             position: absolute;
             top: 10px;
@@ -40,81 +40,98 @@
             right: 10px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             pointer-events: auto;
         }
         .status-card {
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(4px);
             color: white;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
             font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
+        .xp-container {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .xp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6b46c1, #b794f4);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .hp-text { color: #f56565; font-weight: bold; }
+        
         .quest-card {
-            background: rgba(251, 191, 36, 0.9);
+            background: rgba(251, 191, 36, 0.95);
             color: #000;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
             font-weight: bold;
             align-self: flex-end;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 2px solid #fff;
         }
-        /* 하단 컨트롤러 위치 조정 (bottom 값을 높여 위로 올림) */
+        
+        /* 하단 컨트롤러 */
         .controls {
             position: absolute;
-            bottom: 80px; 
+            bottom: 60px; 
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 15px;
+            padding: 0 20px;
             pointer-events: auto;
         }
         .control-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
         .btn {
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 255, 255, 0.3);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(5px);
-            border: 2px solid rgba(255,255,255,0.8);
+            border: 2px solid rgba(255,255,255,0.5);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-            transition: all 0.1s;
+            transition: transform 0.1s;
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
-        .btn:active { transform: scale(0.85); background: rgba(255,255,255,0.6); }
+        .btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
         .btn-action { background: rgba(237, 137, 54, 0.5); border-color: #ed8936; }
         .btn-attack { background: rgba(245, 101, 101, 0.5); border-color: #f56565; }
+        .btn-dash { background: rgba(66, 153, 225, 0.5); border-color: #4299e1; } /* 대시 버튼 추가 */
 
         .dialog-box {
             position: absolute;
-            bottom: 160px; /* 버튼이 올라온 만큼 대화창도 살짝 조정 */
+            bottom: 140px;
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
-            background: rgba(45, 55, 72, 0.95);
-            border: 2px solid #718096;
+            background: rgba(26, 32, 44, 0.98);
+            border: 2px solid #a0aec0;
             padding: 15px;
             border-radius: 12px;
             display: none;
             pointer-events: auto;
             z-index: 100;
             color: white;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
         }
         .shop-menu {
             position: absolute;
@@ -133,6 +150,37 @@
             border: 2px solid #ed8936;
         }
         #hidden-media { display: none; }
+        
+        .level-up-overlay {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            font-weight: bold;
+            color: #fbbf24;
+            text-shadow: 0 0 10px #b794f4;
+            pointer-events: none;
+            display: none;
+            z-index: 200;
+        }
+        .level-up-active {
+            display: block;
+            animation: levelUpAnim 2s forwards;
+        }
+        @keyframes levelUpAnim {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+        /* 스킬 쿨타임 표시 */
+        .cooldown-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -145,15 +193,28 @@
         <audio id="bgm" src="https://orangefreesounds.com/wp-content/uploads/2021/05/Light-fantasy-background-music.mp3" loop></audio>
     </div>
 
+    <div class="level-up-overlay" id="lvl-up-msg">LEVEL UP!</div>
+
     <div class="ui-overlay">
         <div class="top-ui">
             <div class="status-card">
-                <div class="flex gap-3">
-                    <span>💰 <span id="gold">0</span></span>
-                    <span>⚔️ <span id="power">10</span></span>
-                    <span>📦 <span id="loot">0</span></span>
+                <div class="flex flex-col w-full">
+                    <div class="flex justify-between items-center w-full mb-1">
+                        <div class="flex gap-2 text-sm">
+                            <span class="text-yellow-400 font-bold">LV.<span id="level">1</span></span>
+                            <span class="hp-text">HP <span id="hp">100</span>/<span id="max-hp">100</span></span>
+                        </div>
+                        <div class="font-bold text-gray-300 text-xs">📍 <span id="location-name">마을</span></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>💰 <span id="gold">0</span></span>
+                        <span>⚔️ <span id="power">10</span></span>
+                        <span>📦 <span id="loot">0</span></span>
+                    </div>
+                    <div class="xp-container">
+                        <div id="xp-bar" class="xp-bar"></div>
+                    </div>
                 </div>
-                <div class="font-bold text-yellow-400">📍 <span id="location-name">마을</span></div>
             </div>
             <div id="quest-ui" class="quest-card">
                 📜 <span id="quest-desc">상인과 대화하기</span>
@@ -167,9 +228,12 @@
         </div>
 
         <div id="shop" class="shop-menu text-white">
-            <h2 class="text-xl font-bold mb-4 text-orange-400">전설의 대장간</h2>
+            <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                <h2 class="text-xl font-bold text-orange-400">전설의 대장간</h2>
+                <div class="text-sm">💰 <span id="shop-gold">0</span></div>
+            </div>
             <div id="shop-items" class="space-y-2"></div>
-            <button onclick="toggleShop()" class="mt-4 w-full bg-gray-600 py-2 rounded-xl">닫기</button>
+            <button onclick="toggleShop()" class="mt-4 w-full bg-gray-600 py-3 rounded-xl font-bold">상점 닫기</button>
         </div>
 
         <div class="controls">
@@ -178,6 +242,10 @@
                 <div id="btn-right" class="btn">▶</div>
             </div>
             <div class="control-group">
+                <div id="btn-dash" class="btn btn-dash relative">
+                    DASH
+                    <div id="dash-cd" class="cooldown-overlay"></div>
+                </div>
                 <div id="btn-jump" class="btn">UP</div>
                 <div id="btn-attack" class="btn btn-attack">ATK</div>
                 <div id="btn-action" class="btn btn-action">ACT</div>
@@ -187,12 +255,12 @@
 </div>
 
 <script>
-// 나머지 게임 로직은 이전과 동일하게 유지됩니다.
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const jumpVid = document.getElementById('jump-sound-vid');
 const bgm = document.getElementById('bgm');
 
+// --- GAME STATE ---
 const state = {
     gold: 0,
     loot: 0,
@@ -204,22 +272,37 @@ const state = {
     audioInitialized: false,
     questStep: 0,
     kills: 0,
-    chestsFound: []
+    chestsFound: [],
+    level: 1,
+    xp: 0,
+    maxXp: 100,
+    hp: 100,
+    maxHp: 100,
+    screenShake: 0,
+    time: 0,
+    mapWidth: 2000 // 기본 맵 너비 (확장됨)
 };
 
+const camera = { x: 0, y: 0 };
+
+// --- MAP CONFIG ---
 const locations = {
-    'town_start': { name: '시작의 마을', next: 'field_slime', prev: null, bg: '#87CEEB', type: 'town' },
-    'field_slime': { name: '평온한 들판', next: 'field_forest', prev: 'town_start', bg: '#7cfc00', type: 'field', enemy: '🐰' },
-    'field_forest': { name: '깊은 숲', next: 'field_bridge', prev: 'field_slime', bg: '#2d5a27', type: 'field', enemy: '🦊' },
-    'field_bridge': { name: '부서진 다리', next: 'town_second', prev: 'field_forest', bg: '#4a7c59', type: 'field', enemy: '🐗' },
-    'town_second': { name: '무역 도시', next: 'field_desert', prev: 'field_bridge', bg: '#fbd38d', type: 'town' },
-    'field_desert': { name: '황금 사막', next: 'field_oasis', prev: 'town_second', bg: '#ecc94b', type: 'field', enemy: '🦂' },
-    'field_oasis': { name: '오아시스', next: 'field_cave', prev: 'field_desert', bg: '#4fd1c5', type: 'field', enemy: '🐍' },
-    'field_cave': { name: '어두운 동굴', next: 'field_volcano', prev: 'field_oasis', bg: '#2d3748', type: 'field', enemy: '🦇' },
-    'field_volcano': { name: '용암 지대', next: 'town_castle', prev: 'field_cave', bg: '#c53030', type: 'field', enemy: '🔥' },
-    'town_castle': { name: '왕궁 성벽', next: 'field_sky', prev: 'field_volcano', bg: '#718096', type: 'town' },
-    'field_sky': { name: '하늘 섬', next: 'boss_lair', prev: 'town_castle', bg: '#ebf8ff', type: 'field', enemy: '🦅' },
-    'boss_lair': { name: '마왕의 성', next: null, prev: 'field_sky', bg: '#1a202c', type: 'field', enemy: '👿' }
+    'town_start': { name: '시작의 마을', next: 'field_slime', prev: null, bg: '#87CEEB', type: 'town', width: 2000 },
+    'field_slime': { name: '슬라임 평원', next: 'field_forest_1', prev: 'town_start', bg: '#7cfc00', type: 'field', enemy: '💧', weather: 'none', width: 3000 },
+    'field_forest_1': { name: '고요한 숲', next: 'field_forest_2', prev: 'field_slime', bg: '#2d5a27', type: 'field', enemy: '🐰', weather: 'none', width: 3000 },
+    'field_forest_2': { name: '깊은 숲', next: 'field_bridge', prev: 'field_forest_1', bg: '#1a3c18', type: 'field', enemy: '🦊', weather: 'rain', width: 3500 },
+    'field_bridge': { name: '오래된 다리', next: 'town_second', prev: 'field_forest_2', bg: '#4a7c59', type: 'field', enemy: '🐗', weather: 'rain', width: 2500 },
+    'town_second': { name: '무역 도시', next: 'field_desert_1', prev: 'field_bridge', bg: '#fbd38d', type: 'town', width: 2500 },
+    'field_desert_1': { name: '메마른 사막', next: 'field_desert_2', prev: 'town_second', bg: '#ecc94b', type: 'field', enemy: '🦂', weather: 'none', width: 3500 },
+    'field_desert_2': { name: '모래 폭풍', next: 'field_oasis', prev: 'field_desert_1', bg: '#d69e2e', type: 'field', enemy: '🌵', weather: 'sand', width: 3500 },
+    'field_oasis': { name: '오아시스', next: 'field_cave_1', prev: 'field_desert_2', bg: '#4fd1c5', type: 'field', enemy: '🐍', weather: 'none', width: 2000 },
+    'field_cave_1': { name: '동굴 입구', next: 'field_cave_2', prev: 'field_oasis', bg: '#4a5568', type: 'field', enemy: '🦇', weather: 'dark', width: 3000 },
+    'field_cave_2': { name: '심연의 동굴', next: 'field_volcano', prev: 'field_cave_1', bg: '#2d3748', type: 'field', enemy: '🕷️', weather: 'dark', width: 3500 },
+    'field_volcano': { name: '용암 지대', next: 'town_castle', prev: 'field_cave_2', bg: '#c53030', type: 'field', enemy: '🔥', weather: 'ash', width: 4000 },
+    'town_castle': { name: '최후의 요새', next: 'field_snow', prev: 'field_volcano', bg: '#718096', type: 'town', width: 2000 },
+    'field_snow': { name: '설원', next: 'field_sky', prev: 'town_castle', bg: '#e2e8f0', type: 'field', enemy: '🐺', weather: 'snow', width: 4000 },
+    'field_sky': { name: '하늘 섬', next: 'boss_lair', prev: 'field_snow', bg: '#ebf8ff', type: 'field', enemy: '🦅', weather: 'none', width: 3000 },
+    'boss_lair': { name: '마왕의 성', next: null, prev: 'field_sky', bg: '#1a202c', type: 'field', enemy: '👿', weather: 'thunder', width: 2000 }
 };
 
 const playerImg1 = new Image(); playerImg1.src = 'https://github.com/caxs23/plaffy-bird/blob/main/1-removebg-preview.png?raw=true';
@@ -228,15 +311,19 @@ const playerImg2 = new Image(); playerImg2.src = 'https://github.com/caxs23/plaf
 const GRAVITY = 0.6;
 const GROUND_Y = 0.75;
 
-function resize() { 
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight; 
-}
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.addEventListener('resize', resize);
 resize();
 
 const keys = { left: false, right: false, jump: false };
+
+// --- VISUAL & GAMEPLAY OBJECTS ---
 const particles = [];
+const damageTexts = [];
+const droppedItems = [];
+const monsters = [];
+const villagers = [];
+const chests = [];
 
 function initAudio() {
     if (!state.audioInitialized) { bgm.play().catch(() => {}); state.audioInitialized = true; }
@@ -244,25 +331,106 @@ function initAudio() {
 
 function playJumpEffect() { jumpVid.currentTime = 0; jumpVid.play().catch(() => {}); }
 
-function createEffect(x, y, color, count = 10) {
-    for (let i = 0; i < count; i++) {
-        particles.push({
-            x, y,
-            vx: (Math.random() - 0.5) * 10,
-            vy: (Math.random() - 0.5) * 10,
-            life: 1.0,
-            color: color
-        });
+class Particle {
+    constructor(x, y, color, type = 'normal') {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.life = 1.0;
+        this.color = color;
+        this.type = type;
+        if (type === 'rain') { this.vx = -4; this.vy = 15; this.life = 0.8; }
+        if (type === 'snow') { this.vx = Math.random() - 0.5; this.vy = 2; this.life = 1.5; }
+        if (type === 'sand') { this.vx = -15; this.vy = Math.random() * 2; this.life = 0.8; }
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.type === 'normal') this.life -= 0.03;
+        else if (this.y > canvas.height) { 
+            if(this.type === 'rain' || this.type === 'snow') this.y = -10; 
+            else this.life = 0;
+        }
+        if (this.type === 'sand' && this.x < 0) this.x = canvas.width + 10;
+    }
+    draw() {
+        ctx.fillStyle = this.color;
+        // 비/눈/모래는 화면 전체에 흩뿌려지므로 카메라 영향을 받지 않거나, 
+        // 혹은 월드 좌표계라면 카메라 보정을 받아야 함. 
+        // 여기서는 날씨 효과는 '스크린 좌표계'로 처리하여 카메라와 무관하게 뿌림.
+        if (this.type !== 'normal') {
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform for UI/Weather
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.type==='normal'?4:2, this.type==='normal'?4:(this.type==='sand'?2:8));
+            ctx.restore();
+        } else {
+            // 일반 파티클(타격 효과 등)은 월드 좌표
+            ctx.fillRect(this.x, this.y, 4, 4);
+        }
+    }
+}
+
+class DamageText {
+    constructor(x, y, damage, isCrit) {
+        this.x = x; this.y = y;
+        this.text = damage;
+        this.isCrit = isCrit;
+        this.life = 1.0;
+        this.vy = -2;
+    }
+    update() {
+        this.y += this.vy;
+        this.life -= 0.02;
+    }
+    draw() {
+        ctx.save();
+        ctx.font = this.isCrit ? 'bold 24px Arial' : 'bold 18px Arial';
+        ctx.fillStyle = this.isCrit ? '#ffff00' : '#ffffff';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(this.text, this.x, this.y);
+        ctx.fillText(this.text, this.x, this.y);
+        if (this.isCrit) ctx.fillText("CRIT!", this.x, this.y - 20);
+        ctx.restore();
+    }
+}
+
+class DroppedItem {
+    constructor(x, y, type) {
+        this.x = x; this.y = y;
+        this.type = type; 
+        this.vy = -5; 
+        this.groundY = y;
+        this.bounced = false;
+        this.life = 1000;
+    }
+    update() {
+        this.vy += GRAVITY;
+        this.y += this.vy;
+        if (this.y > this.groundY) {
+            this.y = this.groundY;
+            if (!this.bounced) { this.vy = -3; this.bounced = true; }
+            else { this.vy = 0; }
+        }
+        this.life--;
+    }
+    draw() {
+        ctx.font = '24px serif';
+        ctx.fillText(this.type === 'gold' ? '💰' : '❤️', this.x, this.y);
     }
 }
 
 class Entity {
-    constructor(x, y, size, emoji, hp = 0, isNpc = false) {
+    constructor(x, y, size, emoji, hp = 0, isNpc = false, isElite = false) {
         this.x = x; this.y = y; this.size = size; this.emoji = emoji;
-        this.hp = hp; this.initialHp = hp;
-        this.dead = false; this.vx = 0; this.moveTimer = 0;
         this.isNpc = isNpc;
+        this.isElite = isElite;
+        this.maxHp = hp * (isElite ? 3 : 1);
+        this.hp = this.maxHp;
+        this.dead = false; this.vx = 0; this.moveTimer = 0;
         this.hitTimer = 0;
+        if (isElite) this.size *= 1.5;
+        this.homeX = x; // 배회 기준점
     }
 
     update() {
@@ -274,8 +442,10 @@ class Entity {
             this.vx = r < 0.3 ? 0 : (r < 0.65 ? 1 : -1);
         }
         this.x += this.vx * (this.isNpc ? 0.3 : 0.8);
-        if (this.x < 50) this.vx = 1;
-        if (this.x > canvas.width - 50) this.vx = -1;
+        
+        // 배회 범위 제한 (스폰 위치 기준 +- 300)
+        if (this.x < this.homeX - 300) this.vx = 1;
+        if (this.x > this.homeX + 300) this.vx = -1;
         if (this.hitTimer > 0) this.hitTimer--;
     }
 
@@ -285,14 +455,22 @@ class Entity {
         if (this.hitTimer > 0) ctx.filter = 'brightness(2) sepia(1) hue-rotate(-50deg)';
         ctx.font = `${this.size}px serif`;
         ctx.textAlign = 'center';
+        
+        if (this.isElite) {
+            ctx.shadowColor = "yellow";
+            ctx.shadowBlur = 15;
+        }
+
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(this.emoji, this.x, this.y + this.size);
-        if (this.hp > 0) {
+        ctx.shadowBlur = 0;
+
+        if (this.hp > 0 && !this.isNpc) {
             const barW = this.size;
             ctx.fillStyle = '#FF0000';
             ctx.fillRect(this.x - barW/2, this.y - 15, barW, 4);
-            ctx.fillStyle = '#00FF00';
-            ctx.fillRect(this.x - barW/2, this.y - 15, barW * (this.hp / this.initialHp), 4);
+            ctx.fillStyle = this.isElite ? '#FFD700' : '#00FF00';
+            ctx.fillRect(this.x - barW/2, this.y - 15, barW * (this.hp / this.maxHp), 4);
         }
         ctx.restore();
     }
@@ -308,33 +486,89 @@ class Chest {
         ctx.font = '40px serif';
         ctx.textAlign = 'center';
         ctx.fillText(this.opened ? '🔓' : '🎁', this.x, this.y);
+        if (!this.opened) {
+            ctx.fillStyle = 'yellow';
+            ctx.globalAlpha = 0.6 + Math.sin(Date.now()/200)*0.4;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y - 20, 30, 0, Math.PI*2);
+            ctx.fill();
+        }
         ctx.restore();
     }
 }
 
 const player = {
     x: 100, y: 0, width: 70, height: 65, vx: 0, vy: 0,
-    speed: 5.5, jumpPower: -12, isGrounded: false, direction: 1,
+    speed: 6, jumpPower: -13, isGrounded: false, direction: 1,
     frame: 0, walkCounter: 0, isAttacking: false, attackCooldown: 0,
+    dashCooldown: 0, isDashing: false,
 
     update() {
+        // Horizontal Movement
         if (keys.left) { this.vx = -this.speed; this.direction = -1; this.walkCounter++; }
         else if (keys.right) { this.vx = this.speed; this.direction = 1; this.walkCounter++; }
         else { this.vx *= 0.8; this.walkCounter = 0; }
 
-        if (keys.jump && this.isGrounded) { this.vy = this.jumpPower; this.isGrounded = false; playJumpEffect(); }
-        this.vy += GRAVITY; this.x += this.vx; this.y += this.vy;
+        // Dash Logic
+        if (this.isDashing) {
+            this.vx = this.direction * 15; // Fast speed
+            spawnParticle(this.x + this.width/2, this.y + this.height/2, '#87CEEB', 1);
+        }
+        if (this.dashCooldown > 0) this.dashCooldown--;
 
+        // Jump
+        if (keys.jump && this.isGrounded) { this.vy = this.jumpPower; this.isGrounded = false; playJumpEffect(); }
+        
+        this.vy += GRAVITY;
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Ground Collision
         const g = canvas.height * GROUND_Y - this.height;
         if (this.y > g) { this.y = g; this.vy = 0; this.isGrounded = true; }
 
-        const loc = locations[state.location];
-        if (this.x < -20 && loc.prev) { state.location = loc.prev; this.x = canvas.width - 100; changeLocation(); }
-        if (this.x > canvas.width - 40 && loc.next) { state.location = loc.next; this.x = 20; changeLocation(); }
+        // Map Boundaries (Scrolling World)
+        if (this.x < 0) {
+            if (locations[state.location].prev) {
+                state.location = locations[state.location].prev;
+                // Move to end of previous map
+                const prevMapWidth = locations[state.location].width;
+                this.x = prevMapWidth - 100;
+                changeLocation();
+            } else {
+                this.x = 0;
+            }
+        }
+        if (this.x > state.mapWidth - this.width) {
+            if (locations[state.location].next) {
+                state.location = locations[state.location].next;
+                this.x = 50;
+                changeLocation();
+            } else {
+                this.x = state.mapWidth - this.width;
+            }
+        }
 
         if (this.attackCooldown > 0) this.attackCooldown--;
         if (this.attackCooldown < 12) this.isAttacking = false;
         this.frame = (Math.floor(this.walkCounter / 8) % 2);
+
+        // Pick Items
+        for (let i = droppedItems.length - 1; i >= 0; i--) {
+            const item = droppedItems[i];
+            const dist = Math.abs((this.x + this.width/2) - item.x);
+            if (dist < 60) {
+                if (item.type === 'gold') {
+                    state.gold += 10 + Math.floor(Math.random() * 20); 
+                    spawnParticle(item.x, item.y, '#ffd700', 5);
+                } else if (item.type === 'heart') {
+                    state.hp = Math.min(state.hp + 20, state.maxHp);
+                    spawnParticle(item.x, item.y, '#ff0000', 5);
+                }
+                droppedItems.splice(i, 1);
+                updateUI();
+            }
+        }
     },
 
     draw() {
@@ -343,109 +577,217 @@ const player = {
         else { ctx.translate(this.x, this.y); }
         const img = (this.walkCounter > 0 || !this.isGrounded) ? (this.frame === 0 ? playerImg1 : playerImg2) : playerImg1;
         
+        if (this.isDashing) {
+            ctx.globalAlpha = 0.5; // Ghost effect
+            ctx.drawImage(img, -20, 0, this.width, this.height);
+            ctx.globalAlpha = 1.0;
+        }
+
         if (this.isAttacking) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
             ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(this.width, this.height/2, 35, -Math.PI/2, Math.PI/2);
+            ctx.arc(this.width, this.height/2, 40, -Math.PI/2, Math.PI/2);
             ctx.stroke();
         }
         ctx.drawImage(img, 0, 0, this.width, this.height);
         ctx.restore();
     },
 
-    attack() {
-        if (this.attackCooldown > 0) return;
-        this.isAttacking = true; this.attackCooldown = 25;
-        createEffect(this.x + this.width/2, this.y + this.height/2, '#fff', 5);
-        
-        const targets = [...monsters, ...villagers];
-        targets.forEach(m => {
-            if (!m.dead) {
-                const dist = Math.abs((this.x + this.width/2) - m.x);
-                if (dist < 100) {
-                    m.hp -= state.attackPower;
-                    m.hitTimer = 10;
-                    createEffect(m.x, m.y + m.size/2, '#ff0000', 8);
-                    if (m.isNpc) { showDialog("주민", "으악! 왜 이러시는 겁니까!"); m.vx = this.direction * 3; }
-                    if (m.hp <= 0) {
-                        m.dead = true;
-                        if (!m.isNpc) { state.loot++; state.kills++; checkQuest(); }
-                        else { state.gold = Math.max(0, state.gold - 50); }
-                        updateUI();
-                    }
-                }
-            }
-        });
-    },
-
-    interact() {
-        let foundNpc = false;
-        villagers.forEach(v => {
-            if (!v.dead && Math.abs(this.x - v.x) < 80) { foundNpc = true; handleNpcDialog(v.emoji); }
-        });
-        if (!foundNpc && locations[state.location].type === 'town' && Math.abs(this.x - canvas.width/2) < 80) {
-            handleNpcDialog('👨‍🌾');
+    dash() {
+        if (this.dashCooldown <= 0) {
+            this.isDashing = true;
+            this.dashCooldown = 60; // 1 sec cooldown
+            document.getElementById('dash-cd').style.display = 'block';
+            setTimeout(() => { this.isDashing = false; }, 200);
+            setTimeout(() => { document.getElementById('dash-cd').style.display = 'none'; }, 1000);
         }
-        chests.forEach(c => {
-            if (!c.opened && Math.abs(this.x - c.x) < 50) {
-                c.opened = true;
-                state.chestsFound.push(c.id);
-                const reward = 100 + Math.floor(Math.random() * 400);
-                state.gold += reward;
-                createEffect(c.x, c.y, '#ffd700', 20);
-                showDialog("시스템", `숨겨진 보물을 발견했습니다! (+${reward}G)`);
-                updateUI();
-            }
-        });
     }
 };
 
-const monsters = [];
-const villagers = [];
-const chests = [];
+player.attack = function() {
+    if (this.attackCooldown > 0) return;
+    this.isAttacking = true; this.attackCooldown = 25;
+    spawnParticle(this.x + this.width/2, this.y + this.height/2, '#fff', 5);
+    
+    const targets = [...monsters, ...villagers];
+    targets.forEach(m => {
+        if (!m.dead) {
+            const dist = Math.abs((this.x + this.width/2) - m.x);
+            if (dist < 120) {
+                const isCrit = Math.random() < 0.2;
+                const dmg = Math.floor(state.attackPower * (isCrit ? 2 : 1) * (0.9 + Math.random() * 0.2));
+                
+                m.hp -= dmg;
+                m.hitTimer = 10;
+                state.screenShake = 5;
+                
+                damageTexts.push(new DamageText(m.x, m.y, dmg, isCrit));
+                spawnParticle(m.x, m.y + m.size/2, '#ff0000', 8);
 
-function changeLocation() {
-    monsters.length = 0; villagers.length = 0; chests.length = 0;
-    const loc = locations[state.location];
-    if (loc.type === 'town') {
-        for (let i = 0; i < 2; i++) {
-            villagers.push(new Entity(100 + Math.random() * (canvas.width - 200), canvas.height * GROUND_Y - 45, 50, ['👦', '👩', '👴', '👮'][Math.floor(Math.random()*4)], 100, true));
+                if (m.isNpc) { 
+                    showDialog("주민", "으악! 살려주세요!"); 
+                    m.vx = this.direction * 4; 
+                }
+                if (m.hp <= 0) {
+                    m.dead = true;
+                    if (!m.isNpc) {
+                        state.kills++;
+                        gainXp(m.isElite ? 50 : 15);
+                        droppedItems.push(new DroppedItem(m.x, m.y, 'gold'));
+                        if (Math.random() < 0.3) droppedItems.push(new DroppedItem(m.x + 10, m.y, 'gold'));
+                        if (Math.random() < 0.2) droppedItems.push(new DroppedItem(m.x - 10, m.y, 'heart'));
+                        if (m.isElite) {
+                            state.loot += 3;
+                            for(let k=0; k<5; k++) droppedItems.push(new DroppedItem(m.x + (k*5), m.y, 'gold'));
+                        } else {
+                            state.loot++;
+                        }
+                        checkQuest();
+                    } else {
+                        state.gold = Math.max(0, state.gold - 100);
+                    }
+                    updateUI();
+                }
+            }
         }
-    } else {
-        const count = state.location === 'boss_lair' ? 1 : 3;
-        const hpBase = state.location === 'boss_lair' ? 2000 : 30 * (Object.keys(locations).indexOf(state.location));
-        for (let i = 0; i < count; i++) {
-            monsters.push(new Entity(300 + Math.random() * (canvas.width - 400), canvas.height * GROUND_Y - 55, 55, loc.enemy, hpBase));
-        }
+    });
+};
+
+function spawnParticle(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle(x, y, color));
     }
-    if (Math.random() > 0.4) {
-        chests.push(new Chest(Math.random() * (canvas.width - 100) + 50, canvas.height * GROUND_Y - 10));
+}
+
+function gainXp(amount) {
+    state.xp += amount;
+    if (state.xp >= state.maxXp) {
+        state.xp -= state.maxXp;
+        state.level++;
+        state.maxXp = Math.floor(state.maxXp * 1.5);
+        state.maxHp += 20;
+        state.hp = state.maxHp;
+        state.attackPower += 5;
+        
+        const msg = document.getElementById('lvl-up-msg');
+        msg.classList.remove('level-up-active');
+        void msg.offsetWidth; 
+        msg.classList.add('level-up-active');
+        spawnParticle(player.x, player.y, '#ffd700', 30);
     }
     updateUI();
 }
 
+function changeLocation() {
+    state.mapWidth = locations[state.location].width;
+    monsters.length = 0; villagers.length = 0; chests.length = 0; droppedItems.length = 0; particles.length = 0;
+    const loc = locations[state.location];
+    
+    // Create Weather Particles
+    if (loc.weather !== 'none') {
+        const pCount = loc.weather === 'sand' ? 50 : 100;
+        for(let i=0; i<pCount; i++) {
+            particles.push(new Particle(Math.random()*canvas.width, Math.random()*canvas.height, 
+                loc.weather==='rain'?'#a0aec0':(loc.weather==='snow'?'#fff':'#d69e2e'), loc.weather));
+        }
+    }
+
+    if (loc.type === 'town') {
+        // Town width based population
+        const count = Math.floor(state.mapWidth / 400); 
+        for (let i = 0; i < count; i++) {
+            villagers.push(new Entity(300 + Math.random() * (state.mapWidth - 600), canvas.height * GROUND_Y - 45, 50, ['👦', '👩', '👴', '👮', '🤴'][Math.floor(Math.random()*5)], 100, true));
+        }
+    } else {
+        // Field Monsters
+        const count = Math.floor(state.mapWidth / 500);
+        const hpBase = state.location === 'boss_lair' ? 5000 : 50 + (state.level * 20);
+        
+        if (state.location === 'boss_lair') {
+             monsters.push(new Entity(state.mapWidth/2, canvas.height * GROUND_Y - 100, 100, '👿', 10000, false, true));
+        } else {
+            for (let i = 0; i < count; i++) {
+                const isElite = Math.random() < 0.15;
+                monsters.push(new Entity(
+                    400 + Math.random() * (state.mapWidth - 800), 
+                    canvas.height * GROUND_Y - (isElite ? 70 : 55), 
+                    isElite ? 70 : 55, 
+                    loc.enemy, 
+                    hpBase,
+                    false,
+                    isElite
+                ));
+            }
+        }
+    }
+    // Random Chests
+    const chestCount = Math.floor(state.mapWidth / 1000);
+    for(let i=0; i<chestCount; i++) {
+        if (Math.random() > 0.4) {
+            chests.push(new Chest(200 + Math.random() * (state.mapWidth - 400), canvas.height * GROUND_Y - 10));
+        }
+    }
+    updateUI();
+}
+
+player.interact = function() {
+    let foundNpc = false;
+    villagers.forEach(v => {
+        if (!v.dead && Math.abs(player.x - v.x) < 80) { foundNpc = true; handleNpcDialog(v.emoji); }
+    });
+    // Town merchant check
+    if (!foundNpc && locations[state.location].type === 'town' && Math.abs(player.x - (state.mapWidth/2)) < 300) {
+        handleNpcDialog('👨‍🌾');
+    }
+    chests.forEach(c => {
+        if (!c.opened && Math.abs(player.x - c.x) < 60) {
+            c.opened = true;
+            state.chestsFound.push(c.id);
+            const reward = 200 + Math.floor(Math.random() * 500);
+            state.gold += reward;
+            if (Math.random() > 0.5) {
+                droppedItems.push(new DroppedItem(c.x, c.y - 20, 'heart'));
+                showDialog("시스템", `상자에서 ${reward}G와 물약을 발견했습니다!`);
+            } else {
+                showDialog("시스템", `숨겨진 보물 ${reward}G를 발견했습니다!`);
+            }
+            spawnParticle(c.x, c.y, '#ffd700', 20);
+            updateUI();
+        }
+    });
+};
+
 function handleNpcDialog(emoji) {
     let name = "주민", text = "안녕하세요, 모험가님!", btns = [{t: "닫기", f: closeDialog}];
     if (emoji === '👨‍🌾') {
-        name = "상인";
-        text = "강화나 전리품 판매가 필요하신가요?";
+        name = "대장장이";
+        text = "어서오게! 무엇을 도와줄까?";
         btns = [
             {t: "전리품 판매", f: sellLoot},
-            {t: "대장간 상점", f: toggleShop},
+            {t: "상점 열기", f: toggleShop},
+            {t: "체력 회복(100G)", f: healPlayer},
             {t: "닫기", f: closeDialog}
         ];
         if (state.questStep === 0) {
             state.questStep = 1;
-            text = "토끼를 5마리만 잡아다 주시면 보상을 드리죠.";
+            text = "요즘 몬스터들이 흉포해졌어. 5마리만 처리해주면 사례하겠네.";
             checkQuest();
         } else if (state.questStep === 2) {
-            state.questStep = 3; state.gold += 500;
-            text = "오! 정말 잡아오셨군요! 여기 약속한 보상입니다.";
+            state.questStep = 3; state.gold += 1000; gainXp(100);
+            text = "오! 정말 훌륭한 실력이군! 여기 보상일세. (+1000G, +100XP)";
             checkQuest();
         }
-    } else if (emoji === '👴') { name = "장로"; text = "저 너머 마왕의 성이 보이기 시작하는구먼..."; }
+    } else if (emoji === '👴') { name = "촌장"; text = "동쪽 끝 마왕의 성에 전설의 보물이 있다는 소문이..."; }
     showDialog(name, text, btns);
+}
+
+function healPlayer() {
+    if (state.gold >= 100) {
+        state.gold -= 100; state.hp = state.maxHp; updateUI();
+        spawnParticle(player.x, player.y, '#00ff00', 15);
+        showDialog("대장장이", "체력이 모두 회복되었네!");
+    } else showDialog("대장장이", "골드가 부족하군...");
 }
 
 function showDialog(name, text, buttons = [{t: "닫기", f: closeDialog}]) {
@@ -465,31 +807,73 @@ function showDialog(name, text, buttons = [{t: "닫기", f: closeDialog}]) {
 
 function checkQuest() {
     const q = document.getElementById('quest-desc');
-    if (state.questStep === 0) q.innerText = "상인과 대화하기";
+    if (state.questStep === 0) q.innerText = "대장장이와 대화";
     else if (state.questStep === 1) {
-        q.innerText = `토끼 사냥 (${state.kills}/5)`;
+        q.innerText = `몬스터 사냥 (${state.kills}/5)`;
         if (state.kills >= 5) { state.questStep = 2; checkQuest(); }
-    } else if (state.questStep === 2) q.innerText = "상인에게 보고하기";
-    else if (state.questStep === 3) q.innerText = "마왕의 성 찾아가기";
+    } else if (state.questStep === 2) q.innerText = "대장장이에게 보고";
+    else if (state.questStep === 3) q.innerText = "마왕의 성 토벌";
+}
+
+function updateCamera() {
+    // Camera follows player
+    camera.x = player.x - canvas.width / 2;
+    // Clamp camera to map bounds
+    if (camera.x < 0) camera.x = 0;
+    if (camera.x > state.mapWidth - canvas.width) camera.x = state.mapWidth - canvas.width;
 }
 
 function drawBackground() {
     const loc = locations[state.location];
+    
+    // 1. Sky (Fixed)
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
     ctx.fillStyle = loc.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ctx.fillRect(0, canvas.height * GROUND_Y, canvas.width, canvas.height * (1-GROUND_Y));
+    if (loc.weather === 'rain') { ctx.fillStyle = 'rgba(0,0,100,0.1)'; ctx.fillRect(0,0,canvas.width, canvas.height); }
+    if (loc.weather === 'dark') { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0,0,canvas.width, canvas.height); }
     ctx.restore();
-    
+
+    // 2. Parallax Mountains (Moves slower)
     ctx.save();
+    ctx.translate(-camera.x * 0.5, 0); // 50% speed
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'; // Shadowy mountains
+    ctx.beginPath();
+    for(let i=0; i<state.mapWidth; i+=400) {
+        ctx.moveTo(i, canvas.height * GROUND_Y);
+        ctx.lineTo(i+200, canvas.height * 0.4);
+        ctx.lineTo(i+400, canvas.height * GROUND_Y);
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // 3. Ground (Moves normal)
+    ctx.save();
+    ctx.translate(-camera.x, 0);
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(0, canvas.height * GROUND_Y, state.mapWidth, canvas.height * (1-GROUND_Y));
+    
+    // Background Objects
     ctx.font = '80px serif';
     ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFF';
+    
     if (loc.type === 'town') {
-        ctx.fillText('🏠', 150, canvas.height * GROUND_Y);
-        ctx.fillText('🏛️', canvas.width - 200, canvas.height * GROUND_Y);
-        ctx.fillText('👨‍🌾', canvas.width/2, canvas.height * GROUND_Y - 10);
+        // Draw buildings across the town
+        for(let i=150; i<state.mapWidth; i+=600) {
+             ctx.fillText(i%1200===150?'🏠':'🏛️', i, canvas.height * GROUND_Y);
+        }
+        ctx.fillText('👨‍🌾', state.mapWidth/2, canvas.height * GROUND_Y - 10);
+    } else if (loc.type === 'field') {
+        ctx.font = '40px serif';
+        ctx.globalAlpha = 0.5;
+        // Draw trees/cactus along the path
+        const decor = state.location.includes('forest') ? '🌲' : (state.location.includes('desert') ? '🌵' : '🪨');
+        for(let i=100; i<state.mapWidth; i+=300) {
+            ctx.fillText(decor, i + (Math.sin(i)*50), canvas.height * GROUND_Y - 20);
+        }
+        ctx.globalAlpha = 1;
     }
     ctx.restore();
 }
@@ -499,13 +883,20 @@ function updateUI() {
     document.getElementById('power').innerText = state.attackPower;
     document.getElementById('loot').innerText = state.loot;
     document.getElementById('location-name').innerText = locations[state.location].name;
+    document.getElementById('level').innerText = state.level;
+    document.getElementById('hp').innerText = Math.floor(state.hp);
+    document.getElementById('max-hp').innerText = state.maxHp;
+    document.getElementById('shop-gold').innerText = state.gold;
+    const xpPercent = (state.xp / state.maxXp) * 100;
+    document.getElementById('xp-bar').style.width = `${xpPercent}%`;
 }
 
 function sellLoot() {
     if (state.loot > 0) {
-        state.gold += state.loot * 25; state.loot = 0; updateUI();
-        showDialog("상인", "전부 매입했습니다. 감사합니다!");
-    } else showDialog("상인", "판매할 전리품이 없으시네요.");
+        const gain = state.loot * 30;
+        state.gold += gain; state.loot = 0; updateUI();
+        showDialog("대장장이", `${gain}G에 매입했네.`);
+    } else showDialog("대장장이", "전리품이 없군.");
 }
 
 function closeDialog() { 
@@ -514,10 +905,12 @@ function closeDialog() {
 }
 
 const shopItems = [
-    { name: "강철 검", power: 40, price: 200, level: 2 },
-    { name: "암흑 대검", power: 100, price: 800, level: 3 },
-    { name: "성검 엑스칼리버", power: 300, price: 3000, level: 4 },
-    { name: "마왕 처단자", power: 1000, price: 10000, level: 5 }
+    { name: "수습 기사의 검", power: 25, price: 200, level: 2 },
+    { name: "정예병의 강철검", power: 50, price: 600, level: 3 },
+    { name: "화염의 룬검", power: 120, price: 1500, level: 4 },
+    { name: "용사냥꾼의 대검", power: 300, price: 4000, level: 5 },
+    { name: "전설의 엑스칼리버", power: 800, price: 10000, level: 6 },
+    { name: "최상급 체력 물약", power: 0, price: 500, level: 99, type: 'potion' }
 ];
 
 function toggleShop() {
@@ -527,22 +920,29 @@ function toggleShop() {
         const container = document.getElementById('shop-items');
         container.innerHTML = '';
         shopItems.forEach(item => {
-            const owned = state.weaponLevel >= item.level;
+            const isPotion = item.type === 'potion';
+            const owned = !isPotion && state.weaponLevel >= item.level;
             const btn = document.createElement('div');
-            btn.className = "flex justify-between items-center bg-gray-800 p-2.5 rounded-lg";
-            btn.innerHTML = `<div class="text-sm"><div class="font-bold text-yellow-400">${item.name}</div><div class="text-[10px]">파워: ${item.power}</div></div>
-                <button onclick="buyItem(${item.level}, ${item.price}, ${item.power})" class="px-3 py-1 rounded-md text-xs ${owned ? 'bg-gray-600' : 'bg-orange-500'}" ${owned ? 'disabled' : ''}>${owned ? '보유중' : item.price + 'G'}</button>`;
+            btn.className = "flex justify-between items-center bg-gray-700 p-2 rounded-lg border border-gray-600";
+            btn.innerHTML = `<div class="text-sm"><div class="font-bold text-yellow-400">${item.name}</div><div class="text-xs text-gray-300">${isPotion ? '체력 회복' : '공격력: ' + item.power}</div></div>
+                <button onclick="buyItem(${item.level}, ${item.price}, ${item.power}, '${item.type}')" class="px-3 py-1 rounded text-xs font-bold ${owned ? 'bg-gray-500' : 'bg-orange-500'}" ${owned ? 'disabled' : ''}>${owned ? '보유중' : item.price + 'G'}</button>`;
             container.appendChild(btn);
         });
+        updateUI();
     }
 }
 
-window.buyItem = function(lvl, price, pwr) {
+window.buyItem = function(lvl, price, pwr, type) {
     if (state.gold >= price) {
-        state.gold -= price; state.weaponLevel = lvl; state.attackPower = pwr;
-        updateUI(); toggleShop(); toggleShop();
-        createEffect(player.x + player.width/2, player.y, '#00ff00', 15);
-    }
+        if (type === 'potion') {
+            state.gold -= price; state.hp = state.maxHp;
+            showDialog("상점", "체력 회복!");
+        } else {
+            state.gold -= price; state.weaponLevel = lvl; state.attackPower = pwr + (state.level * 2);
+        }
+        updateUI(); toggleShop(); toggleShop(); 
+        spawnParticle(player.x, player.y, '#00ff00', 20);
+    } else alert("골드가 부족합니다!");
 };
 
 function setupControls() {
@@ -554,25 +954,32 @@ function setupControls() {
     bind('btn-left', 'left'); bind('btn-right', 'right'); bind('btn-jump', 'jump');
     document.getElementById('btn-attack').onclick = () => { initAudio(); player.attack(); };
     document.getElementById('btn-action').onclick = () => { initAudio(); player.interact(); };
+    document.getElementById('btn-dash').onclick = () => { initAudio(); player.dash(); };
 }
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();
     
-    ctx.save();
-    for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
-        if (p.life <= 0) { particles.splice(i, 1); } 
-        else {
-            ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, 3, 3);
-        }
+    // Shake Effect
+    if (state.screenShake > 0) {
+        const dx = (Math.random() - 0.5) * state.screenShake;
+        const dy = (Math.random() - 0.5) * state.screenShake;
+        ctx.translate(dx, dy);
+        state.screenShake *= 0.9;
+        if (state.screenShake < 0.5) state.screenShake = 0;
     }
-    ctx.restore();
+
+    updateCamera(); // Update Camera Position
+
+    drawBackground(); // Draws parallax background
+
+    // Apply Camera Transform for Game World
+    ctx.save();
+    ctx.translate(-camera.x, 0);
 
     chests.forEach(c => c.draw());
+    droppedItems.forEach(i => { i.update(); i.draw(); });
+
     player.update(); player.draw();
 
     if (locations[state.location].type === 'town') {
@@ -580,6 +987,35 @@ function loop() {
     } else {
         monsters.forEach(m => { m.update(); m.draw(); });
     }
+
+    // Damage Texts
+    damageTexts.forEach((d, i) => { d.update(); d.draw(); if(d.life <= 0) damageTexts.splice(i,1); });
+
+    // Weather Particles (Rain/Snow) - Need to be independent of camera or handled carefully
+    // In this simple implementation, we draw weather in screen space (UI layer)
+    ctx.restore(); // Restore camera transform
+
+    // Draw Weather Particles (Screen Space)
+    ctx.save();
+    particles.forEach((p, i) => {
+        p.update();
+        // If normal particle (hit effect), it should be world space. 
+        // If weather, screen space.
+        if(p.type === 'normal') {
+            // Re-apply camera for normal particles
+            ctx.save();
+            ctx.translate(-camera.x, 0);
+            p.draw();
+            ctx.restore();
+        } else {
+            p.draw();
+        }
+        if (p.life <= 0) particles.splice(i, 1);
+    });
+    ctx.restore();
+    
+    // Reset transform from shake
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     
     requestAnimationFrame(loop);
 }
