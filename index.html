@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>모바일 횡스크롤 RPG: 에픽 월드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            touch-action: none;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .controls {
+            position: absolute;
+            bottom: 60px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: auto;
+        }
+        .btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.4); }
+        
+        .status-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #444;
+            pointer-events: auto;
+            min-width: 180px;
+            font-size: 14px;
+        }
+        .quest-log {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fbbf24;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .dialog-box {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            background: linear-gradient(to bottom, #2d3748, #1a202c);
+            border: 3px solid #718096;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            pointer-events: auto;
+            z-index: 100;
+            color: white;
+        }
+        .shop-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a202c;
+            padding: 25px;
+            border-radius: 20px;
+            display: none;
+            pointer-events: auto;
+            z-index: 101;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            max-width: 350px;
+            width: 90%;
+            border: 2px solid #ed8936;
+        }
+        #hidden-media { display: none; }
+        .damage-pop {
+            position: absolute;
+            color: #ff4d4d;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hidden-media">
+        <video id="jump-sound-vid" src="https://github.com/caxs23/runandjump/blob/main/jump.mp4?raw=true" preload="auto"></video>
+        <audio id="bgm" src="https://orangefreesounds.com/wp-content/uploads/2021/05/Light-fantasy-background-music.mp3" loop></audio>
+    </div>
+
+    <div class="ui-overlay">
+        <div class="status-bar">
+            <div class="flex justify-between"><span>💰 골드:</span> <span id="gold">0</span></div>
+            <div class="flex justify-between"><span>⚔️ 공격력:</span> <span id="power">10</span></div>
+            <div class="flex justify-between"><span>📦 전리품:</span> <span id="loot">0</span></div>
+            <div class="mt-1 pt-1 border-t border-gray-600 text-center font-bold text-yellow-400">
+                📍 <span id="location-name">마을</span>
+            </div>
+        </div>
+
+        <div id="quest-ui" class="quest-log">
+            퀘스트: <span id="quest-desc">상인과 대화하기</span>
+        </div>
+
+        <div id="dialog" class="dialog-box">
+            <div id="speaker-name" class="font-bold text-blue-300 mb-1">상인</div>
+            <p id="dialog-text">전리품을 팔러 왔나?</p>
+            <div id="dialog-buttons" class="mt-4 flex flex-wrap gap-2">
+                <!-- Buttons dynamically added -->
+            </div>
+        </div>
+
+        <div id="shop" class="shop-menu text-white">
+            <h2 class="text-2xl font-bold mb-4 text-orange-400">전설의 대장간</h2>
+            <div id="shop-items" class="space-y-3"></div>
+            <button onclick="toggleShop()" class="mt-6 w-full bg-gray-600 hover:bg-gray-700 py-2 rounded-xl transition">닫기</button>
+        </div>
+
+        <div class="controls">
+            <div class="flex gap-4">
+                <div id="btn-left" class="btn">◀</div>
+                <div id="btn-right" class="btn">▶</div>
+            </div>
+            <div class="flex gap-4">
+                <div id="btn-jump" class="btn bg-blue-500/30">UP</div>
+                <div id="btn-attack" class="btn bg-red-600/50">ATT</div>
+                <div id="btn-action" class="btn bg-yellow-500/50">ACT</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const jumpVid = document.getElementById('jump-sound-vid');
+const bgm = document.getElementById('bgm');
+
+// --- GAME STATE ---
+const state = {
+    gold: 0,
+    loot: 0,
+    attackPower: 10,
+    weaponLevel: 1,
+    location: 'town_start',
+    dialogVisible: false,
+    shopVisible: false,
+    audioInitialized: false,
+    questStep: 0,
+    kills: 0,
+    chestsFound: []
+};
+
+// 12 Maps Definition
+const locations = {
+    'town_start': { name: '시작의 마을', next: 'field_slime', prev: null, bg: '#87CEEB', type: 'town' },
+    'field_slime': { name: '평온한 들판', next: 'field_forest', prev: 'town_start', bg: '#7cfc00', type: 'field', enemy: '🐰' },
+    'field_forest': { name: '깊은 숲', next: 'field_bridge', prev: 'field_slime', bg: '#2d5a27', type: 'field', enemy: '🦊' },
+    'field_bridge': { name: '부서진 다리', next: 'town_second', prev: 'field_forest', bg: '#4a7c59', type: 'field', enemy: '🐗' },
+    'town_second': { name: '무역 도시', next: 'field_desert', prev: 'field_bridge', bg: '#fbd38d', type: 'town' },
+    'field_desert': { name: '황금 사막', next: 'field_oasis', prev: 'town_second', bg: '#ecc94b', type: 'field', enemy: '🦂' },
+    'field_oasis': { name: '오아시스', next: 'field_cave', prev: 'field_desert', bg: '#4fd1c5', type: 'field', enemy: '🐍' },
+    'field_cave': { name: '어두운 동굴', next: 'field_volcano', prev: 'field_oasis', bg: '#2d3748', type: 'field', enemy: '🦇' },
+    'field_volcano': { name: '용암 지대', next: 'town_castle', prev: 'field_cave', bg: '#c53030', type: 'field', enemy: '🔥' },
+    'town_castle': { name: '왕궁 성벽', next: 'field_sky', prev: 'field_volcano', bg: '#718096', type: 'town' },
+    'field_sky': { name: '하늘 섬', next: 'boss_lair', prev: 'town_castle', bg: '#ebf8ff', type: 'field', enemy: '🦅' },
+    'boss_lair': { name: '마왕의 성', next: null, prev: 'field_sky', bg: '#1a202c', type: 'field', enemy: '👿' }
+};
+
+const playerImg1 = new Image(); playerImg1.src = 'https://github.com/caxs23/plaffy-bird/blob/main/1-removebg-preview.png?raw=true';
+const playerImg2 = new Image(); playerImg2.src = 'https://github.com/caxs23/plaffy-bird/blob/main/2-removebg-preview.png?raw=true';
+
+const GRAVITY = 0.6;
+const GROUND_Y = 0.8;
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+const keys = { left: false, right: false, jump: false };
+const particles = [];
+
+// --- UTILITIES ---
+function initAudio() {
+    if (!state.audioInitialized) { bgm.play().catch(() => {}); state.audioInitialized = true; }
+}
+
+function playJumpEffect() { jumpVid.currentTime = 0; jumpVid.play().catch(() => {}); }
+
+function createEffect(x, y, color, count = 10) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 10,
+            life: 1.0,
+            color: color
+        });
+    }
+}
+
+// --- ENTITY SYSTEM ---
+class Entity {
+    constructor(x, y, size, emoji, hp = 0, isNpc = false) {
+        this.x = x; this.y = y; this.size = size; this.emoji = emoji;
+        this.hp = hp; this.initialHp = hp;
+        this.dead = false; this.vx = 0; this.moveTimer = 0;
+        this.isNpc = isNpc;
+        this.hitTimer = 0;
+    }
+
+    update() {
+        if (this.dead) return;
+        this.moveTimer--;
+        if (this.moveTimer <= 0) {
+            this.moveTimer = 60 + Math.random() * 120;
+            const r = Math.random();
+            this.vx = r < 0.3 ? 0 : (r < 0.65 ? 1 : -1);
+        }
+        this.x += this.vx * (this.isNpc ? 0.3 : 0.8);
+        if (this.x < 50) this.vx = 1;
+        if (this.x > canvas.width - 50) this.vx = -1;
+        if (this.hitTimer > 0) this.hitTimer--;
+    }
+
+    draw() {
+        if (this.dead) return;
+        ctx.save();
+        if (this.hitTimer > 0) ctx.filter = 'brightness(2) sepia(1) hue-rotate(-50deg)';
+        ctx.font = `${this.size}px serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(this.emoji, this.x, this.y + this.size);
+        if (this.hp > 0) {
+            const barW = this.size;
+            ctx.fillStyle = 'rgba(255,0,0,0.5)';
+            ctx.fillRect(this.x - barW/2, this.y - 15, barW, 4);
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(this.x - barW/2, this.y - 15, barW * (this.hp / this.initialHp), 4);
+        }
+        ctx.restore();
+    }
+}
+
+class Chest {
+    constructor(x, y) {
+        this.x = x; this.y = y; this.id = `${state.location}_${Math.floor(x)}`;
+        this.opened = state.chestsFound.includes(this.id);
+    }
+    draw() {
+        ctx.font = '40px serif';
+        ctx.fillText(this.opened ? '🔓' : '🎁', this.x, this.y);
+        if (!this.opened) {
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText('숨겨진 상자', this.x + 20, this.y - 40);
+        }
+    }
+}
+
+const player = {
+    x: 100, y: 0, width: 80, height: 75, vx: 0, vy: 0,
+    speed: 6, jumpPower: -13, isGrounded: false, direction: 1,
+    frame: 0, walkCounter: 0, isAttacking: false, attackCooldown: 0,
+
+    update() {
+        if (keys.left) { this.vx = -this.speed; this.direction = -1; this.walkCounter++; }
+        else if (keys.right) { this.vx = this.speed; this.direction = 1; this.walkCounter++; }
+        else { this.vx *= 0.8; this.walkCounter = 0; }
+
+        if (keys.jump && this.isGrounded) { this.vy = this.jumpPower; this.isGrounded = false; playJumpEffect(); }
+        this.vy += GRAVITY; this.x += this.vx; this.y += this.vy;
+
+        const g = canvas.height * GROUND_Y - this.height;
+        if (this.y > g) { this.y = g; this.vy = 0; this.isGrounded = true; }
+
+        const loc = locations[state.location];
+        if (this.x < -20 && loc.prev) { state.location = loc.prev; this.x = canvas.width - 100; changeLocation(); }
+        if (this.x > canvas.width - 40 && loc.next) { state.location = loc.next; this.x = 20; changeLocation(); }
+
+        if (this.attackCooldown > 0) this.attackCooldown--;
+        if (this.attackCooldown < 12) this.isAttacking = false;
+        this.frame = (Math.floor(this.walkCounter / 8) % 2);
+    },
+
+    draw() {
+        ctx.save();
+        if (this.direction === -1) { ctx.scale(-1, 1); ctx.translate(-this.x - this.width, this.y); }
+        else { ctx.translate(this.x, this.y); }
+        const img = (this.walkCounter > 0 || !this.isGrounded) ? (this.frame === 0 ? playerImg1 : playerImg2) : playerImg1;
+        
+        // Attack Trail
+        if (this.isAttacking) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(this.width, this.height/2, 40, -Math.PI/2, Math.PI/2);
+            ctx.stroke();
+        }
+        ctx.drawImage(img, 0, 0, this.width, this.height);
+        ctx.restore();
+    },
+
+    attack() {
+        if (this.attackCooldown > 0) return;
+        this.isAttacking = true; this.attackCooldown = 25;
+        createEffect(this.x + this.width/2, this.y + this.height/2, '#fff', 5);
+        
+        // Hit logic (Monsters & NPCs)
+        const targets = [...monsters, ...villagers];
+        targets.forEach(m => {
+            if (!m.dead) {
+                const dist = Math.abs((this.x + this.width/2) - m.x);
+                if (dist < 120) {
+                    m.hp -= state.attackPower;
+                    m.hitTimer = 10;
+                    createEffect(m.x, m.y + m.size/2, '#ff0000', 8);
+                    if (m.isNpc) {
+                        showDialog("주민", "으악! 왜 이러시는 겁니까!");
+                        m.vx = this.direction * 3; // Knocks back
+                    }
+                    if (m.hp <= 0) {
+                        m.dead = true;
+                        if (!m.isNpc) { state.loot++; state.kills++; checkQuest(); }
+                        else { state.gold = Math.max(0, state.gold - 50); } // Penalty for killing NPC
+                        updateUI();
+                    }
+                }
+            }
+        });
+    },
+
+    interact() {
+        // NPC Interaction
+        let foundNpc = false;
+        villagers.forEach(v => {
+            if (!v.dead && Math.abs(this.x - v.x) < 100) {
+                foundNpc = true;
+                handleNpcDialog(v.emoji);
+            }
+        });
+        
+        // Merchant in towns
+        if (!foundNpc && locations[state.location].type === 'town' && Math.abs(this.x - canvas.width/2) < 100) {
+            handleNpcDialog('👨‍🌾');
+        }
+
+        // Chest Interaction
+        chests.forEach(c => {
+            if (!c.opened && Math.abs(this.x - c.x) < 60) {
+                c.opened = true;
+                state.chestsFound.push(c.id);
+                const reward = 100 + Math.floor(Math.random() * 400);
+                state.gold += reward;
+                createEffect(c.x, c.y, '#ffd700', 20);
+                showDialog("시스템", `숨겨진 보물 상자를 발견했습니다! (+${reward}G)`);
+                updateUI();
+            }
+        });
+    }
+};
+
+const monsters = [];
+const villagers = [];
+const chests = [];
+
+function changeLocation() {
+    monsters.length = 0; villagers.length = 0; chests.length = 0;
+    const loc = locations[state.location];
+    
+    if (loc.type === 'town') {
+        for (let i = 0; i < 3; i++) {
+            villagers.push(new Entity(100 + Math.random() * (canvas.width - 200), canvas.height * GROUND_Y - 50, 55, ['👦', '👩', '👴', '👮'][Math.floor(Math.random()*4)], 100, true));
+        }
+    } else {
+        const count = state.location === 'boss_lair' ? 1 : 4;
+        const hpBase = state.location === 'boss_lair' ? 2000 : 30 * (Object.keys(locations).indexOf(state.location));
+        for (let i = 0; i < count; i++) {
+            monsters.push(new Entity(300 + Math.random() * (canvas.width - 400), canvas.height * GROUND_Y - 60, 60, loc.enemy, hpBase));
+        }
+    }
+
+    // Random Chest Gimmick
+    if (Math.random() > 0.5) {
+        chests.push(new Chest(Math.random() * (canvas.width - 100) + 50, canvas.height * GROUND_Y - 10));
+    }
+    updateUI();
+}
+
+function handleNpcDialog(emoji) {
+    let name = "주민", text = "안녕하세요, 좋은 날씨네요.", btns = [{t: "닫기", f: closeDialog}];
+    
+    if (emoji === '👨‍🌾') {
+        name = "상인";
+        text = "물건을 팔거나 장비를 강화하고 싶나?";
+        btns = [
+            {t: "전리품 판매 (개당 25G)", f: sellLoot},
+            {t: "상점 열기", f: toggleShop},
+            {t: "닫기", f: closeDialog}
+        ];
+        if (state.questStep === 0) {
+            state.questStep = 1;
+            text = "오! 새로운 모험가로군. 저기 들판의 토끼들을 5마리만 잡아줄 수 있겠나?";
+            checkQuest();
+        } else if (state.questStep === 2) {
+            state.questStep = 3;
+            state.gold += 500;
+            text = "정말 대단해! 여기 보상으로 500G를 주겠네. 더 먼 곳으로 가보게나.";
+            checkQuest();
+        }
+    } else if (emoji === '👴') {
+        name = "장로";
+        text = "세상이 흉흉하구먼... 마왕의 성은 하늘 섬 너머에 있다네.";
+    } else if (emoji === '👮') {
+        name = "경비병";
+        text = "마을 내에서 무기를 휘두르면 벌금이 부과되니 조심하게!";
+    }
+
+    showDialog(name, text, btns);
+}
+
+function showDialog(name, text, buttons = [{t: "닫기", f: closeDialog}]) {
+    document.getElementById('speaker-name').innerText = name;
+    document.getElementById('dialog-text').innerText = text;
+    const btnContainer = document.getElementById('dialog-buttons');
+    btnContainer.innerHTML = '';
+    buttons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = "bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition";
+        btn.innerText = b.t;
+        btn.onclick = b.f;
+        btnContainer.appendChild(btn);
+    });
+    document.getElementById('dialog').style.display = 'block';
+}
+
+function checkQuest() {
+    const q = document.getElementById('quest-desc');
+    if (state.questStep === 0) q.innerText = "마을 상인과 대화하기";
+    else if (state.questStep === 1) {
+        q.innerText = `토끼 사냥 (${state.kills}/5)`;
+        if (state.kills >= 5) { state.questStep = 2; checkQuest(); }
+    } else if (state.questStep === 2) q.innerText = "상인에게 보고하기";
+    else if (state.questStep === 3) q.innerText = "마왕의 성 찾아가기";
+}
+
+function drawBackground() {
+    const loc = locations[state.location];
+    ctx.fillStyle = loc.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Dynamic ground decoration
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(0, canvas.height * GROUND_Y, canvas.width, canvas.height * (1-GROUND_Y));
+    
+    if (loc.type === 'town') {
+        ctx.font = '100px serif';
+        ctx.fillText('🏠', 200, canvas.height * GROUND_Y);
+        ctx.fillText('🏛️', canvas.width - 300, canvas.height * GROUND_Y);
+        ctx.fillText('👨‍🌾', canvas.width/2, canvas.height * GROUND_Y - 10);
+    }
+}
+
+function updateUI() {
+    document.getElementById('gold').innerText = state.gold;
+    document.getElementById('power').innerText = state.attackPower;
+    document.getElementById('loot').innerText = state.loot;
+    document.getElementById('location-name').innerText = locations[state.location].name;
+}
+
+function sellLoot() {
+    if (state.loot > 0) {
+        state.gold += state.loot * 25; state.loot = 0; updateUI();
+        showDialog("상인", "거래 고맙네! 아주 싱싱한 전리품들이군.");
+    } else showDialog("상인", "팔 수 있는 전리품이 없군...");
+}
+
+function closeDialog() { document.getElementById('dialog').style.display = 'none'; document.getElementById('shop').style.display = 'none'; }
+
+const shopItems = [
+    { name: "강철 검", power: 40, price: 200, level: 2 },
+    { name: "암흑 대검", power: 100, price: 800, level: 3 },
+    { name: "성검 엑스칼리버", power: 300, price: 3000, level: 4 },
+    { name: "마왕 처단자", power: 1000, price: 10000, level: 5 }
+];
+
+function toggleShop() {
+    state.shopVisible = !state.shopVisible;
+    document.getElementById('shop').style.display = state.shopVisible ? 'block' : 'none';
+    if (state.shopVisible) {
+        const container = document.getElementById('shop-items');
+        container.innerHTML = '';
+        shopItems.forEach(item => {
+            const owned = state.weaponLevel >= item.level;
+            const btn = document.createElement('div');
+            btn.className = "flex justify-between items-center bg-gray-800 p-3 rounded-xl border border-gray-700";
+            btn.innerHTML = `<div><div class="font-bold text-yellow-400">${item.name}</div><div class="text-xs text-gray-400">공격력: ${item.power}</div></div>
+                <button onclick="buyItem(${item.level}, ${item.price}, ${item.power})" class="px-4 py-1 rounded-lg ${owned ? 'bg-gray-600' : 'bg-orange-500'}" ${owned ? 'disabled' : ''}>${owned ? '보유중' : item.price + 'G'}</button>`;
+            container.appendChild(btn);
+        });
+    }
+}
+
+window.buyItem = function(lvl, price, pwr) {
+    if (state.gold >= price) {
+        state.gold -= price; state.weaponLevel = lvl; state.attackPower = pwr;
+        updateUI(); toggleShop(); toggleShop();
+        createEffect(player.x + player.width/2, player.y, '#00ff00', 15);
+    } else alert("골드가 부족합니다!");
+};
+
+function setupControls() {
+    const bind = (id, key) => {
+        const el = document.getElementById(id);
+        el.onmousedown = el.ontouchstart = (e) => { e.preventDefault(); initAudio(); keys[key] = true; };
+        el.onmouseup = el.ontouchend = (e) => { e.preventDefault(); keys[key] = false; };
+    };
+    bind('btn-left', 'left'); bind('btn-right', 'right'); bind('btn-jump', 'jump');
+    document.getElementById('btn-attack').onclick = () => { initAudio(); player.attack(); };
+    document.getElementById('btn-action').onclick = () => { initAudio(); player.interact(); };
+}
+
+function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+    
+    // Update Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+        if (p.life <= 0) particles.splice(i, 1);
+        else {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.fillRect(p.x, p.y, 4, 4);
+        }
+    }
+    ctx.globalAlpha = 1;
+
+    chests.forEach(c => c.draw());
+    player.update(); player.draw();
+
+    if (locations[state.location].type === 'town') {
+        villagers.forEach(v => { v.update(); v.draw(); });
+    } else {
+        monsters.forEach(m => { m.update(); m.draw(); });
+    }
+    
+    requestAnimationFrame(loop);
+}
+
+setupControls();
+changeLocation();
+checkQuest();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
