@@ -66,10 +66,10 @@
             align-self: flex-end;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        /* 하단 컨트롤러 최적화 */
+        /* 하단 컨트롤러 위치 조정 (bottom 값을 높여 위로 올림) */
         .controls {
             position: absolute;
-            bottom: 30px;
+            bottom: 80px; 
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -103,7 +103,7 @@
 
         .dialog-box {
             position: absolute;
-            bottom: 110px;
+            bottom: 160px; /* 버튼이 올라온 만큼 대화창도 살짝 조정 */
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
@@ -187,6 +187,7 @@
 </div>
 
 <script>
+// 나머지 게임 로직은 이전과 동일하게 유지됩니다.
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const jumpVid = document.getElementById('jump-sound-vid');
@@ -225,7 +226,7 @@ const playerImg1 = new Image(); playerImg1.src = 'https://github.com/caxs23/plaf
 const playerImg2 = new Image(); playerImg2.src = 'https://github.com/caxs23/plaffy-bird/blob/main/2-removebg-preview.png?raw=true';
 
 const GRAVITY = 0.6;
-const GROUND_Y = 0.75; // 모바일 화면 비율에 맞춰 조금 올림
+const GROUND_Y = 0.75;
 
 function resize() { 
     canvas.width = window.innerWidth; 
